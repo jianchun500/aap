@@ -1,0 +1,21 @@
+---
+- name: Check kubelet service status
+  hosts: all
+  become: yes  # 如果需要sudo权限来检查服务状态，请确保此选项为yes
+  tasks:
+    - name: Check if kubelet service is running
+      command: systemctl is-active --quiet kubelet
+      register: kubelet_status
+      ignore_errors: yes  # 忽略错误，以便我们可以在后续步骤中处理不同的状态
+
+    - name: Output kubelet service status
+      debug:
+        msg:
+          - "Kubelet service is running"
+          - "Status code: {{ kubelet_status.rc }}"  # rc为返回码，0表示成功，非0表示失败
+      when: kubelet_status.rc == 0
+
+    - name: Fail if kubelet service is not running
+      fail:
+        msg: "Kubelet service is not running"
+      when: kubelet_status.rc != 0
